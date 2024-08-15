@@ -49,42 +49,4 @@ def display_logs_selection():
         st.write("apg_extension 列的部分数据：")
         st.write(filtered_df['apg_extension'].head())
 
-
-# def display_logs_selection():
-#     st.title("数据选择")
-    
-#     if 'df' not in st.session_state:
-#         st.warning("请先导入数据")
-#         return
-    
-#     df = st.session_state.df
-    
-#     # 确保 'datetime' 列存在
-#     if 'datetime' not in df.columns:
-#         st.error("'datetime' 列未找到，请检查数据导入步骤。")
-#         return
-    
-#     # 确保 'datetime' 列是 datetime64 类型
-#     df['datetime'] = pd.to_datetime(df['datetime'])
-    
-#     # 转换 datetime 为时间戳
-#     min_timestamp = df['datetime'].min().timestamp()
-#     max_timestamp = df['datetime'].max().timestamp()
-    
-#     selected_date_range = st.slider(
-#         "选择时间段", 
-#         min_value=min_timestamp, 
-#         max_value=max_timestamp, 
-#         value=(min_timestamp, max_timestamp),
-#         format="YYYY-MM-DD HH:MM:SS"
-#     )
-
-    
-#     # 将选择的时间戳范围转换回 datetime
-#     selected_date_range = (pd.to_datetime(selected_date_range[0], unit='s'), 
-#                            pd.to_datetime(selected_date_range[1], unit='s'))
-    
-#     filtered_df = df[(df['datetime'] >= selected_date_range[0]) & (df['datetime'] <= selected_date_range[1])]
-    
-#     st.write(f"筛选后的数据：{filtered_df.shape[0]} 行")
-#     st.dataframe(filtered_df)
+    st.session_state.filtered_df = filtered_df
