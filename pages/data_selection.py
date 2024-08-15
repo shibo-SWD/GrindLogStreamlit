@@ -42,6 +42,13 @@ def display_logs_selection():
     st.write(f"筛选后的数据：{filtered_df.shape[0]} 行")
     st.dataframe(filtered_df)
 
+    # 可选: 处理 apg_extension 列的可视化或其他操作
+    if 'apg_extension' in filtered_df.columns:
+        # 将 apg_extension 列处理为合适的格式
+        # 假设 apg_extension 是一个嵌套列表
+        st.write("apg_extension 列的部分数据：")
+        st.write(filtered_df['apg_extension'].head())
+
 
 # def display_logs_selection():
 #     st.title("数据选择")
