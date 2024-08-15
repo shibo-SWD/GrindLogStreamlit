@@ -56,12 +56,19 @@ def import_and_clean_data(folder_path):
             df = df.drop(columns=['apg_extension'])
         
         # 从文件名提取时间信息并添加到 DataFrame
+        df['fileName'] = file
         df['datetime'] = extract_datetime_from_filename(file)
+        df = df.set_index('datetime')
+        df = df.reset_index()
+
+        # columns = [col for col in df.columns if col != 'apg_extension']
+        cols = [col for col in df.columns]
+        apg_extension_name = cols[1]
+        cols.pop(1)
+        cols.append(apg_extension_name)
+        df = df[cols]
         
         dataframes.append(df)
-        print(df)
-        print(df.shape)
-        print(df.iloc[0].to_dict())
     
     # 合并所有 DataFrame
     combined_df = pd.concat(dataframes, ignore_index=True)
