@@ -14,8 +14,12 @@ def display_visualizations():
     # 显示打磨完成情况的饼图
     if 'grinding_completed' in df.columns:
         completion_counts = df['grinding_completed'].value_counts()
+        
+        # 根据 completion_counts 的索引动态生成 labels
+        labels = ['未完成', '完成'][:len(completion_counts)]
+        
         fig, ax = plt.subplots()
-        ax.pie(completion_counts, labels=['未完成', '完成'], autopct='%1.1f%%', startangle=90)
+        ax.pie(completion_counts, labels=labels, autopct='%1.1f%%', startangle=90)
         ax.axis('equal')
         st.pyplot(fig)
 
@@ -38,6 +42,8 @@ def display_visualizations():
                 grind_times_counts = filtered_df['grind_times'].value_counts()
                 fig, ax = plt.subplots()
                 ax.bar(grind_times_counts.index, grind_times_counts.values)
+                ax.set_xlabel('打磨次数')
+                ax.set_ylabel('频次')
                 st.pyplot(fig)
             
             # 打磨每点伸出量的可视化
@@ -46,4 +52,6 @@ def display_visualizations():
                 agp_extension_flatten = [item for sublist in agp_extension for item in sublist]
                 fig, ax = plt.subplots()
                 ax.hist(agp_extension_flatten, bins=20)
+                ax.set_xlabel('伸出量')
+                ax.set_ylabel('频次')
                 st.pyplot(fig)
