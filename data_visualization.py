@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
+import numpy as np
 
 # 设置中文字体
 mpl.font_manager.fontManager.addfont('./misc/font/SimHei.ttf') #临时注册新的全局字体
@@ -96,31 +97,25 @@ def display_visualizations():
     # 选择是否显示去除率分析
     if '去除率分析' in options:
         st.sidebar.subheader("去除率分析")
+
+        # 显示文件名并让用户选择
+        df['filename'] = df['datetime'].apply(lambda x: x.strftime('%Y%m%d_%H%M%S.log'))
+        selected_filename = st.sidebar.selectbox("选择日志文件", df['filename'].unique())
+        selected_row = df[df['filename'] == selected_filename]
+        all_records = selected_row['agp_extension'].apply(lambda x: x if isinstance(x, list) else [])
+        agp_data = all_records.iloc[0]
+
         is_apg_extension_visualization = st.sidebar.checkbox("打磨头去除量可视化")
         is_apg_extension_analysis = st.sidebar.checkbox("打磨量分析")
 
         if is_apg_extension_visualization:
             st.subheader("打磨头去除量可视化")
-            # 显示文件名并让用户选择
-            df['filename'] = df['datetime'].apply(lambda x: x.strftime('%Y%m%d_%H%M%S.log'))
-            selected_filename = st.sidebar.selectbox("选择日志文件", df['filename'].unique())
-            selected_row = df[df['filename'] == selected_filename]
+            all_records = selected_row['agp_extension'].apply(lambda x: x if isinstance(x, list) else [])
+            agp_data = all_records.iloc[0]
 
             # 选择具体的打磨记录
             if 'agp_extension' in selected_row.columns:
                 # 提取所有的打磨记录
-                all_records = selected_row['agp_extension'].apply(lambda x: x if isinstance(x, list) else [])
-
-                # # 展示打磨记录选择框
-                # num_records = len(all_records)
-                # record_options = [f"打1磨记录 {i+1}" for i in range(num_records)]
-                # selected_record_index = st.selectbox("选择打磨记录", record_options)
-
-                # # 根据用户选择的记录索引提取数据
-                # selected_record_index = int(selected_record_index.split(' ')[-1]) - 1
-                # agp_data = all_records.iloc[selected_record_index]
-                agp_data = all_records.iloc[0]
-
                 # Prepare the data for plotting
                 # 准备数据用于绘图
                 data = []
@@ -169,3 +164,50 @@ def display_visualizations():
             else:
                 st.warning("数据中不包含 'agp_extension' 列")
         
+        if is_apg_extension_analysis:
+            st.subheader("去除量分析")
+            # 计算每一遍打磨的平均值
+            mean_values = []
+            for extension_list in agp_data:
+                if len(extension_list) > 2:  # 确保列表中有足够的数据去除极值
+                    filtered_list = sorted(extension_list)[1:-1]  # 去除极大值和极小值
+                    mean_value = sum(filtered_list) / len(filtered_list)
+                else:
+                    mean_value = sum(extension_list) / len(extension_list)  # 无法去除极值，直接取平均
+                mean_values.append(mean_value)
+
+            # 计算每次打磨的平均下降量
+            descent_values = []
+            for i in range(1, len(mean_values)):
+                descent = mean_values[i - 1] - mean_values[i]
+                descent_values.append(descent)
+
+            # 绘制打磨次数及其平均下降量的barplot
+
+            fig, ax = plt.subplots(figsize=(10, 6))
+
+            # 使用 seaborn 的色调调色板 'OrRd'，根据 descent_values 进行颜色映射
+            norm = plt.Normalize(min(descent_values), max(descent_values))
+            sm = plt.cm.ScalarMappable(cmap="OrRd", norm=norm)
+            sm.set_array([])
+
+            sns.barplot(
+                x=range(2, len(mean_values) + 1),
+                y=descent_values,
+                palette=sns.color_palette("OrRd", as_cmap=True),
+                ax=ax,
+                hue=descent_values,  # 按照值大小进行颜色绘制
+                dodge=False
+            )
+
+            ax.set_title('每次打磨的平均下降量')
+            ax.set_xlabel('打磨编号')
+            ax.set_ylabel('平均下降量')
+
+            st.pyplot(fig)
+
+            # 打印打磨过程的统计信息
+            st.write(f"打磨过程共经历了 {len(agp_data)} 遍")
+            # st.write(f"打磨的平均下降量如下：")
+            # for i, descent in enumerate(descent_values, start=2):
+            #     st.write(f"第 {i} 遍打磨: 平均下降 {descent:.2f}")
